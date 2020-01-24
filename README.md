@@ -1,9 +1,9 @@
 # screw_alchemy
-Apache License 2.0
+
 SQLAlchemy wrapper for ETL purposes
 
 ## Initialization example
-```
+```python3
 import screw_alchemy as sa
 eng1 = {"instance": "dev_dwh",
         "js":{
@@ -24,3 +24,5 @@ dev_dwh.gen_from_js()
 dev_dwh.dispose()
 dev_dwh.gen_from_js()
 ```
+
+Apache License 2.0
