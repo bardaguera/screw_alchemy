@@ -25,4 +25,9 @@ dev_dwh.dispose()
 dev_dwh.gen_from_js()
 ```
 
+## Query
+```python3
+from sqlalchemy.sql.expression import case, or_, cast, select, insert, update #, except_, and_
+```
+
 Apache License 2.0
