@@ -2,6 +2,8 @@
 # coding: utf-8
 
 ##
+## Version 6 -- 2020-02-07
+#    Added method add_column to base class and to table attr
 ## Version 5 -- 2020-02-01
 #    Added _UpdInstanceAddColumn method
 ## Version 4 -- 2020-01-27
@@ -50,13 +52,72 @@ def get_columns(self):
         col_list.append({'name':col.name, 'type':col.type, 'nullable': col.nullable})
     return col_list
 
-def _m_args_serialize(m_args):
+def _MArgsSerialize(m_args):
     if '__table__.c' in m_args:
         return m_args
     else:
         key_columns = str(list(map(lambda x:'__table__.c.'+x, m_args['primary_key']))).replace("'",'')
         return "{\'primary_key\': "+ key_columns+"}"
+    
+def _UpdInstanceTypeMapping(engine, s):
+    #Dict values could be: 
+    ## SQLAlchemy types
+    ##  dicts with 'engine_name' and ! 'default' -- if engine hasn't found
+    mapping_dict = {'bool': sqlalchemy.types.Boolean,
+                    'yes_or_no': sqlalchemy.types.Boolean,
+                    'bigint': sqlalchemy.types.BigInteger,
+                    'int8': sqlalchemy.sql.sqltypes.INTEGER,
+                    'int4': sqlalchemy.sql.sqltypes.INTEGER,
+                    'int2': sqlalchemy.sql.sqltypes.INTEGER,
+                    'numeric': sqlalchemy.types.Numeric,
+                    'bit': sqlalchemy.types.CHAR, #---?
+                    'uuid': {'postgresql':sqlalchemy.dialects.postgresql.UUID,
+                            'default':sqlalchemy.types.TEXT},
+                    'date': sqlalchemy.types.Date,
+                    'time': sqlalchemy.types.Time,
+                    'interval': sqlalchemy.types.Interval,
+                    'timestamp': sqlalchemy.types.TIMESTAMP,
+                    'timestamptz': sqlalchemy.types.TIMESTAMP(timezone=True),
+                    'abstime': {'default':sqlalchemy.types.TIMESTAMP},
+                    'varchar': sqlalchemy.types.TEXT,
+                    'char': sqlalchemy.types.TEXT,
+                    'text': sqlalchemy.types.TEXT,
+                    'inet':  sqlalchemy.types.TEXT,
+                    'float4': sqlalchemy.types.Float(precision=4),
+                    'float8': sqlalchemy.types.Float(precision=8),
+                    'int2vector': sqlalchemy.types.ARRAY(sqlalchemy.sql.sqltypes.INTEGER),
+                    'bytea': sqlalchemy.types.LargeBinary}
 
+    if type(mapping_dict.get(s, False)) == dict:
+        engine_specific_type = mapping_dict[s].get(engine.name, False)
+        if not engine_specific_type:
+            return mapping_dict[s]['default']
+        else:
+            return engine_specific_type
+    else:
+        return mapping_dict.get(s, False)
+    
+def _UpdInstanceAddColumn(self, col_dict, table_name = None):
+    #Two use-cases: self is base_object or self is table_obj
+    if 'BaseInstance' in str(self.__class__):
+        loc_engine_obj = self.engine
+        if not table_name:
+            loc_table_name = self._cur_table_.__tablename__
+        else:
+            loc_table_name = table_name
+    else:
+        loc_table_name = self.__tablename__
+        loc_engine_obj = self._engine_link_
+
+    if not _UpdInstanceTypeMapping(loc_engine_obj, col_dict['col_type']):
+        print('TYPE DOES NOT FOUND %s' % col_dict['col_type'])
+        return None
+    column_obj = Column(col_dict['col_name'],
+                        _UpdInstanceTypeMapping(loc_engine_obj, col_dict['col_type']),
+                        nullable=True)
+    loc_engine_obj.execute('ALTER TABLE {} ADD COLUMN {} {};'.format(loc_table_name,
+                                                                     column_obj.compile(dialect=loc_engine_obj.dialect),
+                                                                     column_obj.type.compile(loc_engine_obj.dialect)))
 
 class BaseInstance(object):
     def __init__(self, instance = None, js = None):
@@ -89,22 +150,13 @@ class BaseInstance(object):
             self.status[schema_name] = e._code_str
     
     def _gen_table_(self, table_name, schema_obj = None, m_args = None):
-        print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
-        print(table_name, schema_obj, self._cur_schema_)
-        print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
         if not schema_obj:
             schema_obj = self._cur_schema_
-        print(table_name, schema_obj, self._cur_schema_)
-        print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
         Base = declarative_base()
         __table__ = Table(table_name, schema_obj, autoload=True, autoload_with=self.engine)
         table_dict = {'__tablename__':table_name, '__table__': __table__}
         if m_args:
-            table_dict['__mapper_args__'] = eval(_m_args_serialize(m_args))
-        #print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
-        #print('table_dict',table_dict)
-        #print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
-        #TODO: обернуть в try-except
+            table_dict['__mapper_args__'] = eval(_MArgsSerialize(m_args))
         try:
             setattr(self, table_name, type(str(table_name),
                                       (Base,),
@@ -117,7 +169,9 @@ class BaseInstance(object):
             
         else:
             self._cur_table_ = eval('self.'+table_name)
+            self._cur_table_._engine_link_ = self.engine
             self._cur_table_.get_columns = MethodType(get_columns, self._cur_table_)
+            self._cur_table_.add_column = MethodType(_UpdInstanceAddColumn, self._cur_table_)
         
         #setattr(eval('self.'+table), 'get_columns', get_columns)
         #gettting columns
@@ -149,58 +203,18 @@ class BaseInstance(object):
     
     def dispose(self):
         self.engine.dispose()
-                   
-    def _UpdInstanceTypeMapping(self, s):
-        #Dict values could be: 
-        ## SQLAlchemy types
-        ##  dicts with 'engine_name' and ! 'default' -- if engine hasn't found
-        mapping_dict = {'bool': sqlalchemy.types.Boolean,
-                        'yes_or_no': sqlalchemy.types.Boolean,
-                        'bigint': sqlalchemy.types.BigInteger,
-                        'int8': sqlalchemy.sql.sqltypes.INTEGER,
-                        'int4': sqlalchemy.sql.sqltypes.INTEGER,
-                        'int2': sqlalchemy.sql.sqltypes.INTEGER,
-                        'numeric': sqlalchemy.types.Numeric,
-                        'bit': sqlalchemy.types.CHAR, #---?
-                        'uuid': {'postgresql':sqlalchemy.dialects.postgresql.UUID,
-                                'default':sqlalchemy.types.TEXT},
-                        'date': sqlalchemy.types.Date,
-                        'time': sqlalchemy.types.Time,
-                        'interval': sqlalchemy.types.Interval,
-                        'timestamp': sqlalchemy.types.TIMESTAMP,
-                        'timestamptz': sqlalchemy.types.TIMESTAMP(timezone=True),
-                        'abstime': {'default':sqlalchemy.types.TIMESTAMP},
-                        'varchar': sqlalchemy.types.TEXT,
-                        'char': sqlalchemy.types.TEXT,
-                        'text': sqlalchemy.types.TEXT,
-                        'inet':  sqlalchemy.types.TEXT,
-                        'float4': sqlalchemy.types.Float(precision=4),
-                        'float8': sqlalchemy.types.Float(precision=8),
-                        'int2vector': sqlalchemy.types.ARRAY(sqlalchemy.sql.sqltypes.INTEGER),
-                        'bytea': sqlalchemy.types.LargeBinary}
         
-        if type(mapping_dict.get(s, False)) == dict:
-            engine_specific_type = mapping_dict[s].get(self.engine.name, False)
-            if not engine_specific_type:
-                return mapping_dict[s]['default']
-            else:
-                return engine_specific_type
-        else:
-            return mapping_dict.get(s, False)
-    
-    def _UpdInstanceAddColumn(self, col_name, col_type, table_obj = None):
-        if not self._UpdInstanceTypeMapping(col_type):
-            print('TYPE HAS NOT FOUND %s' % col_type)
-        if not table_obj:
-            table_obj = self._cur_table_
-        column_obj = Column(col_name, self._UpdInstanceTypeMapping(col_type))
-        self.engine.execute('ALTER TABLE {} ADD COLUMN {} {} null;'.format(table_obj.__tablename__,
-                                                                           column_obj.compile(dialect=self.engine.dialect),
-                                                                           column_obj.type.compile(self.engine.dialect)))
-'''
-    def _UpdInstanceAddTable(self, table_name, schema_obj = None, m_args= None):
+    def add_column(self, col_dict, table_name):
+        _UpdInstanceAddColumn(self, col_dict, table_name = table_name)
+
+
+    def _UpdInstanceAddTable(self, table_name, columns_list, schema_obj = None):
         if not schema_obj:
             schema_obj = self._cur_schema_
-        self.engine.execute('CREATE TABLE {}.{}'.format(schema_obj.schema, table_name)
-        _gen_table_(table_name, schema_obj, m_args)
-'''
+        self.engine.execute('CREATE TABLE {}.{} ()'.format(schema_obj.schema, table_name))
+        for col_dict in columns_list:
+            self.add_column(col_dict={'col_name': col_dict['col_name'], 'col_type': col_dict['col_type']},
+                            table_name=table_name)
+        schema_obj.reflect()
+        key_names = list(d['col_name'] for d in filter(lambda d: d['is_primary'] == True, columns_list))
+        self._gen_table_(table_name, schema_obj, {'primary_key': key_names})
