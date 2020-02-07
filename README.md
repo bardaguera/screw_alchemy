@@ -29,27 +29,18 @@ dev_dwh.gen_from_js()
 ```json
 {"schema":"public",
   "tables":[
-    {"table_name":"Book",
+    {"table_name":"book",
       "table_id":2527151,
-      "attrs":[
-        {"col_name":"id",
-         "col_type":"uuid",
-         "is_primary":true},
-        {"col_name":"created_on",
-         "col_type":"timestamp",
-         "is_primary":false},
-        {"col_name":"Name",
-         "col_type":"varchar",
-         "is_primary":false}]},
-    {"table_name":"BookPrice",
+      "attrs":[{"col_name":"id", "col_type":"uuid", "is_primary":true},
+               {"col_name":"created_on", "col_type":"timestamp", "is_primary":false},
+               {"col_name":"name", "col_type":"varchar", "is_primary":false}
+              ]
+    },
+    {"table_name":"book_price",
      "table_id":2527163,
-     "attrs":[
-        {"col_name":"id",
-         "col_type":"uuid",
-         "is_primary":true},
-        {"col_name":"Price",
-         "col_type":"int4",
-         "is_primary":false}]
+     "attrs":[{"col_name":"id", "col_type":"uuid", "is_primary":true},
+              {"col_name":"price", "col_type":"int4", "is_primary":false}
+             ]
     }
   ]
 }
