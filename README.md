@@ -63,7 +63,7 @@ for cur_table_desc in js_schema['tables']:
             for col_dict in cur_table_desc['attrs']:
                 #base.add_column(col_dict = {'col_name': 'surname', 'col_type': 'varchar'}, table_name = 'employee')
                 dwh.add_column(col_dict = col_dict, table_name = table_name, schema_name = 'book_shop')
-        
+```
 ## Query
 ```python3
 from sqlalchemy.sql.expression import case, or_, cast, select, insert, update #, except_, and_
