@@ -1,26 +1,53 @@
 # screw_alchemy
 
-SQLAlchemy wrapper for ETL purposes. You can create database structure out of json description, which is handy if the master-database frequently changes its structure.
+SQLAlchemy wrapper for ETL purposes. You can create a database structure out of JSON description, which is handy if the master-data system frequently changes the structure of its tables.
 
 ## Initialization example
+
+In this example, we have the database named DB with two schemas: "book_shop" and "history".
+With the initialization of the BaseInstance class, this json will be loaded.
+With the call of the gen_instance() method connection will be created and all mentioned schemas and tables will be reflected on the MetaData and Table objects respectively, and pointers to them will be set to the Base class as if they were attributes.
+
 ```python3
 import screw_alchemy as sa
 eng1 = {"instance": "dwh",
         "js":{
-            "conn_string":"postgresql+psycopg2://user:upassword@instance:5432/database_name",
+            "conn_string":"postgresql+psycopg2://user:upassword@instance:5432/DB",
             "debug":False,
             "tables":{
                 "book_shop": {
                     "sales": {'primary_key': ['order_id', 'product_id']},
                     "accounts": {'primary_key':['id']}
-                    }
-                }
+                    },
+                "history": {
+                    },
+                },
+             "default_schema": True
             }
         }
 
 dwh = sa.BaseInstance(**eng1)
 dwh.gen_instance()
 ```
+dwh
+SQLAlchemy objects:
+-> engine   
+-> session
+-> instance
+MetaData:
+-> book_shop_meta
+-> history_meta
+-> default_meta
+Tables:
+-> sales
+-> accounts
+Methods^
+-> dispose()
+-> whoami()
+-> reflect_table()
+-> mimic_table()
+-> add_table()
+-> add_column()
 
 ## Create DB from json
 ```json
