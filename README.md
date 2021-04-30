@@ -29,31 +29,23 @@ eng1 = {"instance": "dwh",
 dwh = sa.BaseInstance(**eng1)
 dwh.gen_instance()
 ```
-
-dwh | Attribute
- | -------------
- | Content cell 2
- | Content column 2
-
-> SQLAlchemy objects:  
-> > engine   
-> > session  
-> > instance  
-> MetaData:  
-> > book_shop_meta  
-> > history_meta  
-> > default_meta  
-> Tables:  
-> > sales  
-> > accounts  
-> Methods:  
-> > dispose()  
-> > whoami()  
-> > reflect_table()  
-> > mimic_table()  
-> > add_table()  
-> > add_column()  
-
+dwh | Attribute | Desc
+------------ | ------------- | -------------
+ &nbsp; | engine | sqlalchemy.engine.base.Engine
+ &nbsp; | session | sqlalchemy.orm.session.Session
+ &nbsp; | instance | instance name
+ &nbsp; | book_shop_meta | sqlalchemy.sql.schema.MetaData for the book_shop schema |
+ &nbsp; | history_meta | MetaData for the history schema |
+ &nbsp; | default_meta | MetaData for the temporary tables |
+ &nbsp; | sales | sqlalchemy.ext.declarative.api.DeclarativeMeta for book_shop.sales |
+ &nbsp; | accounts | Table |
+ &nbsp; | dispose() | 
+ &nbsp; | whoami()  | 
+ &nbsp; | reflect_table() | 
+ &nbsp; | mimic_table() | 
+ &nbsp; | add_table() | 
+ &nbsp; | add_column() | 
+ 
 ## Create DB from json
 Imagine master system added two new tables: books and book_price. You can ask them to send you the description of the database in the SQLAlchemy-alike format.
 
@@ -67,7 +59,7 @@ Imagine master system added two new tables: books and book_price. You can ask th
                {"col_name":"name", "col_type":"varchar", "is_primary":false}
               ]
     },
-    {"table_name":"book_price",
+    {"table_name":"book_prices",
      "table_id":2527163,
      "attrs":[{"col_name":"id", "col_type":"uuid", "is_primary":true},
               {"col_name":"price", "col_type":"int4", "is_primary":false}
@@ -76,7 +68,7 @@ Imagine master system added two new tables: books and book_price. You can ask th
   ]
 }
 ```
-### Schema restoration
+This is an example of schema restoration:
 ```
 def get_col_diff(attrs, table_obj):
     diff = set(d['col_name'] for d in attrs)
@@ -98,6 +90,9 @@ for cur_table_desc in js_schema['tables']:
                 #base.add_column(col_dict = {'col_name': 'surname', 'col_type': 'varchar'}, table_name = 'employee')
                 dwh.add_column(col_dict = col_dict, table_name = table_name, schema_name = 'book_shop')
 ```
+
+After runnung the code tables books and book_prices will be added to the database ans then reflected to the dwh instance.
+
 ## Query
 ```python3
 from sqlalchemy.sql.expression import case, or_, cast, select, insert, update #, except_, and_
