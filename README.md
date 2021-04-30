@@ -38,10 +38,10 @@ dwh | Attribute | Desc
  &nbsp; | history_meta | MetaData for the history schema |
  &nbsp; | default_meta | MetaData for the temporary tables |
  &nbsp; | sales | sqlalchemy.ext.declarative.api.DeclarativeMeta for book_shop.sales |
- &nbsp; | accounts | Table |
- &nbsp; | dispose() | 
- &nbsp; | whoami()  | 
- &nbsp; | reflect_table() | 
+ &nbsp; | accounts | sqlalchemy.ext.declarative.api.DeclarativeMeta for book_shop.sales |
+ &nbsp; | dispose() | dispose connection 
+ &nbsp; | whoami()  | returns engine description
+ &nbsp; | reflect_table() | MetaData.reflect
  &nbsp; | mimic_table() | 
  &nbsp; | add_table() | 
  &nbsp; | add_column() | 
