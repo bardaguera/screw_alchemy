@@ -30,26 +30,28 @@ dwh = sa.BaseInstance(**eng1)
 dwh.gen_instance()
 ```
 dwh
-SQLAlchemy objects:
--> engine   
--> session
--> instance
+> SQLAlchemy objects:
+> > engine   
+> > session
+> > instance
 MetaData:
--> book_shop_meta
--> history_meta
--> default_meta
+> > book_shop_meta
+> > history_meta
+> > default_meta
 Tables:
--> sales
--> accounts
-Methods^
--> dispose()
--> whoami()
--> reflect_table()
--> mimic_table()
--> add_table()
--> add_column()
+> > sales
+> > accounts
+Methods:
+> > dispose()
+> > whoami()
+> > reflect_table()
+> > mimic_table()
+> > add_table()
+> > add_column()
 
 ## Create DB from json
+Imagine master system added two new tables: books and book_price. You can ask them to send you the description of the database in the SQLAlchemy-alike format.
+
 ```json
 {"schema":"book_shop",
   "tables":[
@@ -69,7 +71,7 @@ Methods^
   ]
 }
 ```
-## Schema restoration
+### Schema restoration
 ```
 def get_col_diff(attrs, table_obj):
     diff = set(d['col_name'] for d in attrs)
