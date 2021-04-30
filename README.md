@@ -1,6 +1,6 @@
 # screw_alchemy
 
-SQLAlchemy wrapper for ETL purposes
+SQLAlchemy wrapper for ETL purposes. You can create database structure out of json description, which is handy if the master-database frequently changes its structure.
 
 ## Initialization example
 ```python3
@@ -19,7 +19,7 @@ eng1 = {"instance": "dwh",
         }
 
 dwh = sa.BaseInstance(**eng1)
-dwh.gen_from_js()
+dwh.gen_instance()
 ```
 
 ## Create DB from json
