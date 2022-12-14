@@ -243,7 +243,7 @@ class BaseInstance(object):
     def _overload_functions_to_table(self, table_name, m_args):
         self._cur_table = self[table_name]
         if m_args:
-            pk = args.get('primary_key', None)
+            pk = m_args.get('primary_key', None)
             self._cur_table._mapped_keys_ = pk
         self._cur_table._engine_link_ = self.engine
         self._cur_table.get_columns = MethodType(get_columns,
