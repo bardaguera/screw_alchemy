@@ -1,3 +1,9 @@
+[project]
+name = "screw_alchemy"
+version = "0.1"
+description = "a package that meows"
+
+
 [build-system]
 requires = ["setuptools ~= 65.6.3", "wheel", "sqlalchemy ~= 1.4.45"]
 build-backend = "setuptools.build_meta"
