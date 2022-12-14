@@ -1,0 +1,2 @@
+[build-system]
+requires = ["sqlalchemy ~= 1.4.45"]
